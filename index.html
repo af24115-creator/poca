@@ -32,11 +32,11 @@
           <input type="password" id="authPass" placeholder="••••••••" class="w-full bg-slate-700 border border-slate-600 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-400">
         </div>
 
-        <!-- お気に入りキャスト選択欄 (casts.js から自動生成) -->
+        <!-- お気に入りキャスト選択欄 -->
         <div id="castSelectField" class="hidden">
           <label class="block text-xs text-slate-400 mb-1">お気に入りキャスト</label>
           <select id="regCast" class="w-full bg-slate-700 border border-slate-600 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-400 text-slate-100">
-            <!-- JavaScriptで動的追加されます -->
+            <!-- JavaScriptで動的追加 -->
           </select>
         </div>
 
@@ -50,9 +50,9 @@
     <!-- ログイン後：マイページ -->
     <div id="myPage" class="hidden space-y-6 text-center">
       
-      <!-- キャスト画像連動型 デジタル会員証 -->
-      <div id="memberCard" class="relative rounded-2xl p-6 text-white shadow-2xl text-left overflow-hidden bg-cover bg-center transition-all duration-500 min-h-[220px] flex flex-col justify-between border border-slate-600/50">
-        <!-- 読みやすさのための黒グラデーション重ね掛け -->
+      <!-- キャスト画像・店舗ロゴ連動型 デジタル会員証 -->
+      <div id="memberCard" class="relative rounded-2xl p-6 text-white shadow-2xl text-left overflow-hidden bg-no-repeat bg-top bg-cover transition-all duration-500 min-h-[220px] flex flex-col justify-between border border-slate-600/50">
+        <!-- 視認性向上のための黒グラデーション -->
         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
 
         <div class="relative z-10">
@@ -79,14 +79,8 @@
       <div class="bg-slate-700/50 p-3 rounded-xl flex items-center justify-between text-xs border border-slate-600/40">
         <span class="text-slate-300 font-bold">推しキャスト変更:</span>
         <select id="changeCastSelect" onchange="changeCast(this.value)" class="bg-slate-700 border border-slate-600 rounded-lg px-2 py-1.5 text-slate-100 focus:outline-none">
-          <!-- JavaScriptで動的追加されます -->
+          <!-- JavaScriptで動的追加 -->
         </select>
-      </div>
-
-      <!-- 提示用QRコード -->
-      <div class="bg-white p-4 rounded-2xl inline-block shadow-lg">
-        <img id="custQr" src="" alt="QR" class="w-40 h-40 mx-auto">
-        <p class="text-slate-600 text-xs mt-2 font-bold">会計時にこのQRを提示</p>
       </div>
 
       <button onclick="logout()" class="block w-full text-center text-xs text-slate-400 hover:text-slate-200 pt-2">
@@ -100,9 +94,13 @@
   <script src="casts.js"></script>
 
   <script>
+    // 指定されたWebアプリURLを埋め込み
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwJTmkOPsib9TX9qG6f7jdeBrhH8BaY0_xOj_1ye7FsU2IFoUGSL5EmaoH2tejKuDYp/exec";
 
-    // casts.js が読み込めなかった場合のフォールバック用データ
+    // 推しがいない場合（店舗ロゴ）のデフォルト定義
+    const NONE_CAST = { id: "none", name: "指定なし（箱推し）", image: "logo.jpeg" };
+
+    // casts.js が読み込めなかった場合のフォールバック
     const defaultCastMembers = [
       { id: "cast-yuinya", name: "ゆいにゃ", image: "ゆ.jpeg" },
       { id: "cast-fuchan", name: "ふちゃん", image: "ふちゃん.jpeg" },
@@ -115,13 +113,11 @@
       { id: "cast-yayoi", name: "やよい", image: "j.png" }
     ];
 
-    // 利用するキャスト一覧リスト
     const activeCasts = (typeof castMembers !== 'undefined') ? castMembers : defaultCastMembers;
 
     let authMode = 'login';
     let currentUser = null;
 
-    // 画面初期化（キャスト選択肢の動的生成）
     document.addEventListener('DOMContentLoaded', () => {
       initCastSelects();
     });
@@ -133,15 +129,21 @@
       regSelect.innerHTML = '';
       changeSelect.innerHTML = '';
 
-      activeCasts.forEach(cast => {
+      // プルダウンの先頭に「指定なし（箱推し）」を追加
+      const allOptions = [NONE_CAST, ...activeCasts];
+
+      allOptions.forEach(cast => {
+        const isNone = cast.id === 'none';
+        const labelText = isNone ? `✨ ${cast.name}` : `💖 ${cast.name}`;
+
         const opt1 = document.createElement('option');
         opt1.value = cast.id;
-        opt1.textContent = `💖 ${cast.name}`;
+        opt1.textContent = labelText;
         regSelect.appendChild(opt1);
 
         const opt2 = document.createElement('option');
         opt2.value = cast.id;
-        opt2.textContent = `💖 ${cast.name}`;
+        opt2.textContent = labelText;
         changeSelect.appendChild(opt2);
       });
     }
@@ -196,7 +198,7 @@
             password: password,
             name: data.name || name,
             points: data.points || 0,
-            cast: data.cast || cast || activeCasts[0].id
+            cast: data.cast || cast || NONE_CAST.id
           };
           renderMyPage();
         } else {
@@ -215,20 +217,31 @@
       document.getElementById('dispName').innerText = currentUser.name;
       document.getElementById('dispId').innerText = "ID: " + currentUser.id;
       document.getElementById('dispPoints').innerText = currentUser.points;
-      document.getElementById('custQr').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(currentUser.id)}`;
 
       updateCardDesign(currentUser.cast);
     }
 
-    // キャストIDに基づいて画像と名前をカードにセット
+    // カードデザインの更新（推しなしなら店舗ロゴを表示）
     function updateCardDesign(castId) {
-      const castInfo = activeCasts.find(c => c.id === castId) || activeCasts[0];
       const card = document.getElementById('memberCard');
       const badge = document.getElementById('castBadge');
       
-      // 画像パスを背景に設定
-      card.style.backgroundImage = `url('${castInfo.image}')`;
-      badge.innerText = `💖 ${castInfo.name} 推し`;
+      const castInfo = activeCasts.find(c => c.id === castId) || NONE_CAST;
+
+      if (castInfo.id === 'none') {
+        // 店舗ロゴ表示時：中央寄せ & ロゴ全体が入るように調整
+        card.style.backgroundImage = `url('${NONE_CAST.image}')`;
+        card.style.backgroundPosition = 'center';
+        card.style.backgroundSize = 'contain';
+        badge.innerText = `✨ 箱推し`;
+      } else {
+        // キャスト写真表示時：上部（顔付近）を中心に拡大表示
+        card.style.backgroundImage = `url('${castInfo.image}')`;
+        card.style.backgroundPosition = 'top';
+        card.style.backgroundSize = 'cover';
+        badge.innerText = `💖 ${castInfo.name} 推し`;
+      }
+
       document.getElementById('changeCastSelect').value = castInfo.id;
     }
 
