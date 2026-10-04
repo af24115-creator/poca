@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>デジタルポイントカード</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4">
 
@@ -110,8 +110,8 @@
   </div>
 
   <script>
-    // ★ ご自身のGAS WebアプリURLを設定してください
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwD549CaT4aO3xYxrgi8aL5KQ7CTQ4GngKd0VArmE9dfTmV0Mv8pFgSx001qkkKjX9I/exec";
+    // ★ Step 1で取得した新しいGAS URLを貼り付けてください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyb--QzeXQ7rLTbV9TA77zVjrgUkdm-D2kW9fbmD6tlD1natkPrW4I_1j5iLfAWmC0Z/exec";
 
     let authMode = 'login';
     let currentUser = null;
@@ -165,7 +165,7 @@
       try {
         const res = await fetch(GAS_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'text/plain' }, // CORS/Preflightエラー回避の重要設定
+          headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -177,7 +177,7 @@
           alert(data.message);
         }
       } catch(e) {
-        alert('通信エラーが発生しました。ローカルサーバー経由(http://)で開いているか確認してください。');
+        alert('通信エラーが発生しました。GAS URLの設定またはアクセス制限を確認してください。');
       } finally {
         setLoading('auth', false);
       }
