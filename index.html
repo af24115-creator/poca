@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>デジタルポイントカード</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+  <div class="w-full max-w-md bg-slate-800 border border-slate-700 rounded-3xl p-6 shadow-2xl">
+    
+    <!-- タブ切替 (客用 / 店舗用) -->
+    <div class="flex bg-slate-700 rounded-xl p-1 mb-6 text-xs font-bold text-slate-300">
+      <button id="tabCust" onclick="switchTab('cust')" class="flex-1 py-2 rounded-lg bg-amber-500 text-slate-900 transition">客用 (マイページ)</button>
+      <button id="tabStore" onclick="switchTab('store')" class="flex-1 py-2 rounded-lg transition">店舗用 (ポイント操作)</button>
+    </div>
+
+    <!-- ================= 客用エリア ================= -->
+    <div id="custSection">
+      
+      <!-- ログイン / 新規登録フォーム -->
+      <div id="authForms">
+        <div class="flex justify-center gap-4 mb-4 text-sm font-bold border-b border-slate-700 pb-2">
+          <button id="btnLoginTab" onclick="toggleAuthMode('login')" class="text-amber-400 border-b-2 border-amber-400 pb-1">ログイン</button>
+          <button id="btnRegTab" onclick="toggleAuthMode('reg')" class="text-slate-400 pb-1">新規会員登録</button>
+        </div>
+
+        <div class="space-y-3">
+          <div id="nameField" class="hidden">
+            <label class="block text-xs text-slate-400 mb-1">ニックネーム</label>
+            <input type="text" id="regName" placeholder="例: やまだ" class="w-full bg-slate-700 border border-slate-600 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">会員ID (英数字)</label>
+            <input type="text" id="authId" placeholder="例: user01" class="w-full bg-slate-700 border border-slate-600 rounded-xl p-3 text-sm font-mono focus:outline-none focus:border-amber-400">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">パスワード</label>
+            <input type="password" id="authPass" placeholder="••••••••" class="w-full bg-slate-700 border border-slate-600 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-400">
+          </div>
+          <button id="authSubmitBtn" onclick="handleAuth()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 rounded-xl text-sm transition mt-2 flex justify-center items-center gap-2">
+            <span id="authBtnText">ログイン</span>
+            <i id="authSpinner" class="fa-solid fa-spinner fa-spin hidden"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ログイン後：マイページ -->
+      <div id="myPage" class="hidden space-y-6 text-center">
+        <div class="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 rounded-2xl p-6 text-white shadow-lg text-left relative overflow-hidden">
+          <p class="text-[10px] text-amber-100 uppercase tracking-widest font-semibold">MEMBER CARD</p>
+          <h2 id="dispName" class="text-2xl font-bold mt-1">--</h2>
+          <p id="dispId" class="text-xs font-mono text-amber-200 mt-0.5">ID: --</p>
+          
+          <div class="mt-6 pt-4 border-t border-amber-400/40 flex justify-between items-end">
+            <div>
+              <p class="text-[10px] text-amber-100 uppercase">現在の所持ポイント</p>
+              <p class="text-4xl font-extrabold mt-1"><span id="dispPoints">0</span> <span class="text-sm font-normal">pt</span></p>
+            </div>
+            <button onclick="refreshPoints()" class="bg-amber-800/40 hover:bg-amber-800/60 p-2.5 rounded-xl text-xs transition flex items-center gap-1">
+              <i class="fa-solid fa-rotate-right" id="refreshIcon"></i> 更新
+            </button>
+          </div>
+        </div>
+
+        <!-- 提示用QRコード -->
+        <div class="bg-white p-4 rounded-2xl inline-block shadow-md">
+          <img id="custQr" src="" alt="QR" class="w-40 h-40 mx-auto">
+          <p class="text-slate-500 text-xs mt-2 font-bold">会計時にこのQRを提示</p>
+        </div>
+
+        <button onclick="logout()" class="block w-full text-center text-xs text-slate-400 hover:text-slate-200 pt-2">
+          ログアウト
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= 店舗用エリア ================= -->
+    <div id="storeSection" class="hidden space-y-4">
+      <div class="bg-slate-700/50 p-4 rounded-2xl space-y-3 border border-slate-600/50">
+        <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2">
+          <i class="fa-solid fa-store"></i> 店舗操作パネル
+        </h3>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">店舗暗証番号</label>
+          <input type="password" id="storePass" value="admin123" class="w-full bg-slate-700 border border-slate-600 rounded-xl p-2.5 text-sm focus:outline-none focus:border-amber-400">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">対象の会員ID</label>
+          <input type="text" id="targetId" placeholder="例: user01" class="w-full bg-slate-700 border border-slate-600 rounded-xl p-2.5 text-sm font-mono focus:outline-none focus:border-amber-400">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">付与・減算ポイント</label>
+          <div class="grid grid-cols-3 gap-2 mb-2">
+            <button onclick="setAmount(1)" class="bg-slate-600 hover:bg-slate-500 py-2 rounded-lg text-xs font-bold transition">+1 pt</button>
+            <button onclick="setAmount(5)" class="bg-slate-600 hover:bg-slate-500 py-2 rounded-lg text-xs font-bold transition">+5 pt</button>
+            <button onclick="setAmount(-10)" class="bg-slate-600 hover:bg-slate-500 py-2 rounded-lg text-xs font-bold transition">-10 pt</button>
+          </div>
+          <input type="number" id="pointAmount" value="1" class="w-full bg-slate-700 border border-slate-600 rounded-xl p-2.5 text-sm font-bold text-center">
+        </div>
+        <button onclick="addStorePoints()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 rounded-xl text-sm transition flex justify-center items-center gap-2 mt-2">
+          <span id="storeBtnText">ポイントを更新する</span>
+          <i id="storeSpinner" class="fa-solid fa-spinner fa-spin hidden"></i>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ★ ご自身のGAS WebアプリURLを設定してください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwdNvIhNYgB6ipJQlQ4fbpDC99khw3xDsvnPT-xb1e0bcCyyFvUjbcv0iunenW6ZNnf/exechttps://script.google.com/macros/s/AKfycbwdNvIhNYgB6ipJQlQ4fbpDC99khw3xDsvnPT-xb1e0bcCyyFvUjbcv0iunenW6ZNnf/exec";
+
+    let authMode = 'login';
+    let currentUser = null;
+
+    function switchTab(type) {
+      if(type === 'cust') {
+        document.getElementById('custSection').classList.remove('hidden');
+        document.getElementById('storeSection').classList.add('hidden');
+        document.getElementById('tabCust').className = "flex-1 py-2 rounded-lg bg-amber-500 text-slate-900 font-bold transition";
+        document.getElementById('tabStore').className = "flex-1 py-2 rounded-lg text-slate-300 font-bold transition";
+      } else {
+        document.getElementById('custSection').classList.add('hidden');
+        document.getElementById('storeSection').classList.remove('hidden');
+        document.getElementById('tabStore').className = "flex-1 py-2 rounded-lg bg-amber-500 text-slate-900 font-bold transition";
+        document.getElementById('tabCust').className = "flex-1 py-2 rounded-lg text-slate-300 font-bold transition";
+      }
+    }
+
+    function toggleAuthMode(mode) {
+      authMode = mode;
+      if(mode === 'login') {
+        document.getElementById('nameField').classList.add('hidden');
+        document.getElementById('btnLoginTab').className = "text-amber-400 border-b-2 border-amber-400 pb-1";
+        document.getElementById('btnRegTab').className = "text-slate-400 pb-1";
+        document.getElementById('authBtnText').innerText = "ログイン";
+      } else {
+        document.getElementById('nameField').classList.remove('hidden');
+        document.getElementById('btnRegTab').className = "text-amber-400 border-b-2 border-amber-400 pb-1";
+        document.getElementById('btnLoginTab').className = "text-slate-400 pb-1";
+        document.getElementById('authBtnText').innerText = "新規登録してマイページへ";
+      }
+    }
+
+    async function handleAuth() {
+      const id = document.getElementById('authId').value.trim();
+      const password = document.getElementById('authPass').value.trim();
+      const name = document.getElementById('regName').value.trim();
+
+      if(!id || !password) return alert('IDとパスワードを入力してください');
+      if(authMode === 'reg' && !name) return alert('ニックネームを入力してください');
+
+      setLoading('auth', true);
+
+      const payload = {
+        action: authMode,
+        id: id,
+        password: password,
+        name: name
+      };
+
+      try {
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' }, // CORS/Preflightエラー回避の重要設定
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if(data.status === 'success') {
+          currentUser = { id: id, password: password, name: data.name || name, points: data.points || 0 };
+          renderMyPage();
+        } else {
+          alert(data.message);
+        }
+      } catch(e) {
+        alert('通信エラーが発生しました。ローカルサーバー経由(http://)で開いているか確認してください。');
+      } finally {
+        setLoading('auth', false);
+      }
+    }
+
+    function renderMyPage() {
+      document.getElementById('authForms').classList.add('hidden');
+      document.getElementById('myPage').classList.remove('hidden');
+      document.getElementById('dispName').innerText = currentUser.name;
+      document.getElementById('dispId').innerText = "ID: " + currentUser.id;
+      document.getElementById('dispPoints').innerText = currentUser.points;
+      document.getElementById('custQr').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(currentUser.id)}`;
+    }
+
+    async function refreshPoints() {
+      if(!currentUser) return;
+      const icon = document.getElementById('refreshIcon');
+      icon.classList.add('fa-spin');
+
+      try {
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'login', id: currentUser.id, password: currentUser.password })
+        });
+        const data = await res.json();
+        if(data.status === 'success') {
+          currentUser.points = data.points;
+          document.getElementById('dispPoints').innerText = data.points;
+        }
+      } catch(e) {
+        alert('更新に失敗しました');
+      } finally {
+        icon.classList.remove('fa-spin');
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('myPage').classList.add('hidden');
+      document.getElementById('authForms').classList.remove('hidden');
+      document.getElementById('authPass').value = '';
+    }
+
+    function setAmount(val) {
+      document.getElementById('pointAmount').value = val;
+    }
+
+    async function addStorePoints() {
+      const storePass = document.getElementById('storePass').value;
+      const targetId = document.getElementById('targetId').value.trim();
+      const amount = document.getElementById('pointAmount').value;
+
+      if(!targetId) return alert('対象の会員IDを入力してください');
+
+      setLoading('store', true);
+
+      try {
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'addPoints', storePass: storePass, targetId: targetId, amount: amount })
+        });
+        const data = await res.json();
+
+        if(data.status === 'success') {
+          alert(`【更新成功】\n会員ID: ${targetId}\n最新ポイント: ${data.newPoints} pt`);
+        } else {
+          alert(data.message);
+        }
+      } catch(e) {
+        alert('通信エラーが発生しました');
+      } finally {
+        setLoading('store', false);
+      }
+    }
+
+    function setLoading(target, isLoading) {
+      const btnText = document.getElementById(target + 'BtnText');
+      const spinner = document.getElementById(target + 'Spinner');
+      if(isLoading) {
+        btnText.classList.add('opacity-50');
+        spinner.classList.remove('hidden');
+      } else {
+        btnText.classList.remove('opacity-50');
+        spinner.classList.add('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
