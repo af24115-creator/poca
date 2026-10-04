@@ -51,7 +51,7 @@
     <div id="myPage" class="hidden space-y-6 text-center">
       
       <!-- キャスト画像・店舗ロゴ連動型 デジタル会員証 -->
-      <div id="memberCard" class="relative rounded-2xl p-6 text-white shadow-2xl text-left overflow-hidden bg-no-repeat bg-top bg-cover transition-all duration-500 min-h-[220px] flex flex-col justify-between border border-slate-600/50">
+      <div id="memberCard" class="relative rounded-2xl p-6 text-white shadow-2xl text-left overflow-hidden bg-no-repeat bg-cover transition-all duration-500 min-h-[220px] flex flex-col justify-between border border-slate-600/50">
         <!-- 視認性向上のための黒グラデーション -->
         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
 
@@ -94,7 +94,6 @@
   <script src="casts.js"></script>
 
   <script>
-    // 指定されたWebアプリURLを埋め込み
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwJTmkOPsib9TX9qG6f7jdeBrhH8BaY0_xOj_1ye7FsU2IFoUGSL5EmaoH2tejKuDYp/exec";
 
     // 推しがいない場合（店舗ロゴ）のデフォルト定義
@@ -129,7 +128,6 @@
       regSelect.innerHTML = '';
       changeSelect.innerHTML = '';
 
-      // プルダウンの先頭に「指定なし（箱推し）」を追加
       const allOptions = [NONE_CAST, ...activeCasts];
 
       allOptions.forEach(cast => {
@@ -221,7 +219,6 @@
       updateCardDesign(currentUser.cast);
     }
 
-    // カードデザインの更新（推しなしなら店舗ロゴを表示）
     function updateCardDesign(castId) {
       const card = document.getElementById('memberCard');
       const badge = document.getElementById('castBadge');
@@ -229,15 +226,15 @@
       const castInfo = activeCasts.find(c => c.id === castId) || NONE_CAST;
 
       if (castInfo.id === 'none') {
-        // 店舗ロゴ表示時：中央寄せ & ロゴ全体が入るように調整
+        // 店舗ロゴ表示時：中央寄せ & 全体表示
         card.style.backgroundImage = `url('${NONE_CAST.image}')`;
         card.style.backgroundPosition = 'center';
         card.style.backgroundSize = 'contain';
         badge.innerText = `✨ 箱推し`;
       } else {
-        // キャスト写真表示時：上部（顔付近）を中心に拡大表示
+        // キャスト写真表示時：中央（50%）よりも上・top（0%）よりも下の 25% の位置を指定
         card.style.backgroundImage = `url('${castInfo.image}')`;
-        card.style.backgroundPosition = 'top';
+        card.style.backgroundPosition = 'center 25%';
         card.style.backgroundSize = 'cover';
         badge.innerText = `💖 ${castInfo.name} 推し`;
       }
