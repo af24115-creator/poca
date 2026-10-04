@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>店舗操作パネル</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+  <div class="w-full max-w-md bg-slate-800 border border-slate-700 rounded-3xl p-6 shadow-2xl space-y-4">
+    <div class="bg-slate-700/50 p-4 rounded-2xl space-y-3 border border-slate-600/50">
+      <h3 class="text-base font-bold text-amber-400 flex items-center gap-2">
+        <i class="fa-solid fa-store"></i> 店舗専用 ポイント管理パネル
+      </h3>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">店舗暗証番号</label>
+        <input type="password" id="storePass" value="admin123" class="w-full bg-slate-700 border border-slate-600 rounded-xl p-2.5 text-sm focus:outline-none focus:border-amber-400">
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">対象の会員ID</label>
+        <input type="text" id="targetId" placeholder="例: user01" class="w-full bg-slate-700 border border-slate-600 rounded-xl p-2.5 text-sm font-mono focus:outline-none focus:border-amber-400">
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">付与・減算ポイント</label>
+        <div class="grid grid-cols-3 gap-2 mb-2">
+          <button onclick="setAmount(1)" class="bg-slate-600 hover:bg-slate-500 py-2 rounded-lg text-xs font-bold transition">+1 pt</button>
+          <button onclick="setAmount(5)" class="bg-slate-600 hover:bg-slate-500 py-2 rounded-lg text-xs font-bold transition">+5 pt</button>
+          <button onclick="setAmount(-10)" class="bg-slate-600 hover:bg-slate-500 py-2 rounded-lg text-xs font-bold transition">-10 pt</button>
+        </div>
+        <input type="number" id="pointAmount" value="1" class="w-full bg-slate-700 border border-slate-600 rounded-xl p-2.5 text-sm font-bold text-center">
+      </div>
+      <button onclick="addStorePoints()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 rounded-xl text-sm transition flex justify-center items-center gap-2 mt-2">
+        <span id="storeBtnText">ポイントを更新する</span>
+        <i id="storeSpinner" class="fa-solid fa-spinner fa-spin hidden"></i>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwJTmkOPsib9TX9qG6f7jdeBrhH8BaY0_xOj_1ye7FsU2IFoUGSL5EmaoH2tejKuDYp/exec";
+
+    function setAmount(val) {
+      document.getElementById('pointAmount').value = val;
+    }
+
+    async function addStorePoints() {
+      const storePass = document.getElementById('storePass').value;
+      const targetId = document.getElementById('targetId').value.trim();
+      const amount = document.getElementById('pointAmount').value;
+
+      if(!targetId) return alert('対象の会員IDを入力してください');
+
+      setLoading(true);
+
+      try {
+        const res = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'addPoints', storePass: storePass, targetId: targetId, amount: amount })
+        });
+        const data = await res.json();
+
+        if(data.status === 'success') {
+          alert(`【更新成功】\n会員ID: ${targetId}\n最新ポイント: ${data.newPoints} pt`);
+        } else {
+          alert(data.message);
+        }
+      } catch(e) {
+        alert('通信エラーが発生しました');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function setLoading(isLoading) {
+      const btnText = document.getElementById('storeBtnText');
+      const spinner = document.getElementById('storeSpinner');
+      if(isLoading) {
+        btnText.classList.add('opacity-50');
+        spinner.classList.remove('hidden');
+      } else {
+        btnText.classList.remove('opacity-50');
+        spinner.classList.add('hidden');
+      }
+    }
+  </script>
+</body>
+</html>
