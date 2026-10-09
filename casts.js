@@ -53,5 +53,11 @@ const castMembers = [
         name: "やよい",
         image: "j.png",
         workDays: ["2026-10-02","2026-10-04"]
+    },
+    {
+        id: "cast-ema",
+        name: "えま",
+        image: "j.png",
+        workDays: ["2026-10-09","2026-10-10","2026-10-13","2026-10-14"]
     }
 ];
